@@ -59,7 +59,6 @@ class BasicBlock(nn.Module):
         if residual is None:
             residual = x
 
-        print("dla_x_shape",x.shape)
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
@@ -372,13 +371,16 @@ def dla60x_c(pretrained, **kwargs):  # DLA-X-60-C
     return model
 
 
-def dla60(pretrained=None, **kwargs):  # DLA-60
+def dla60(pretrained=True, **kwargs):  # DLA-60
     Bottleneck.expansion = 2
     model = DLA([1, 1, 1, 2, 3, 1],
                 [16, 32, 128, 256, 512, 1024],
                 block=Bottleneck, **kwargs)
-    if pretrained is not None:
-        model.load_pretrained_model(pretrained, 'dla60')
+    # if pretrained is not None:
+    #     model.load_pretrained_model(pretrained, 'dla60')
+    if pretrained:
+        print("***************")
+        model.load_pretrained_model(data='imagenet', name='dla60', hash='24839fc4')
     return model
 
 

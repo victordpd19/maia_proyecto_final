@@ -25,7 +25,6 @@ from typing import Optional
 from .register import MODELS
 
 from . import dla as dla_modules
-from . import cbam as cbam_modules
 
 
 @MODELS.register()
@@ -85,14 +84,6 @@ class HerdNet(nn.Module):
             padding=0, bias=True
         )
 
-        # CBAM module
-        self.cbam = cbam_modules.CBAM(
-            gate_channels=512,
-            reduction_ratio=16,
-            spatial_kernel=7,
-            use_residual=False
-        )
-
         # localization head
         self.loc_head = nn.Sequential(
             nn.Conv2d(channels[self.first_level], head_conv,
@@ -126,8 +117,6 @@ class HerdNet(nn.Module):
 
         encode = self.base_0(input)    
         bottleneck = self.bottleneck_conv(encode[-1])
-
-        bottleneck = self.cbam(bottleneck) # Apply CBAM to the bottleneck feature map
         encode[-1] = bottleneck
 
         decode_hm = self.dla_up(encode[self.first_level:])

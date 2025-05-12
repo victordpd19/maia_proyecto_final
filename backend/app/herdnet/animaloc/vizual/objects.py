@@ -62,7 +62,7 @@ def draw_text(
 
     draw = ImageDraw.Draw(image)
     try:
-        font = ImageFont.truetype("segoeui.ttf", size=font_size)
+        font = ImageFont.truetype("DejaVuSans.ttf", size=font_size)
     except IOError:
         font = ImageFont.load_default()
 
