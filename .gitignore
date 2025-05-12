@@ -6,11 +6,21 @@
 .venv/
 venv/
 ENV/
+**herdnet-env/
 
 # Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
+
+*.pth
+*.jpg
+*.png
+*.jpeg
+
+**/test_infer
+
+**/test_infer/*.JPG
 
 # Distribution / packaging
 dist/
