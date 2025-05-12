@@ -13,118 +13,90 @@ import io
 load_dotenv()
 
 # API endpoint
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_URL = os.getenv("API_URL", "http://localhost:8000") # Assuming the backend runs on port 8000
 
 st.set_page_config(
-    page_title="Invoice Data Extractor",
-    page_icon="📊",
+    page_title="Image Inference",
+    page_icon="🖼️",
     layout="wide",
 )
 
 def main():
-    st.title("📊 Invoice Data Extractor")
+    st.title("Image Inference with HerdNet")
     st.markdown("""
-    Upload a PDF invoice and extract key information using AI.
-    
-    This application extracts:
-    - Vendor name
-    - Items and quantities
-    - Total tax amount
-    - Total invoice amount
-    - Invoice date
+    Upload an image to perform inference using the HerdNet model.
+    The processed image will be displayed below.
     """)
-    
-    # File uploader
-    uploaded_file = st.file_uploader("Upload your invoice (PDF)", type=["pdf"])
-    
+
+    # File uploader for images
+    uploaded_file = st.file_uploader("Upload your image", type=["jpg", "jpeg", "png"])
+
     if uploaded_file is not None:
-        # Display PDF preview
-        st.subheader("Invoice Preview")
-        
-        # Convert PDF to base64
-        pdf_bytes = uploaded_file.getvalue()
-        pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
-        
-        # Display PDF download link
-        st.download_button(
-            label="Download PDF",
-            data=pdf_bytes,
-            file_name=uploaded_file.name,
-            mime="application/pdf"
-        )
-        
+        # Display uploaded image preview
+        st.subheader("Uploaded Image Preview")
+        # To display the image, we can use st.image directly with the uploaded file object
+        # or read bytes and then display. PIL can be used for more control if needed.
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image.", use_column_width=True)
+
+        # Convert image to base64
+        img_bytes = uploaded_file.getvalue()
+        img_base64 = base64.b64encode(img_bytes).decode("utf-8")
+
         # Process button
-        if st.button("Extract Data"):
-            # Call the API to start extraction
-            with st.spinner("Starting extraction process..."):
-                response = requests.post(
-                    f"{API_URL}/extraction/extract",
-                    json={"pdf_base64": pdf_base64}
-                )
+        if st.button("Process Image"):
+            # Call the API to perform inference
+            with st.spinner("Processing image..."):
+                try:
+                    response = requests.post(
+                        f"{API_URL}/inference/infer", # Updated to the inference endpoint
+                        json={"image": img_base64} # Sending a single image as per backend
+                    )
+
+                    if response.status_code == 200:
+                        inference_data = response.json()
+                        processed_image_base64 = inference_data.get("image")
+
+                        if processed_image_base64:
+                            st.success("Image processed successfully!")
+                            st.subheader("Processed Image")
+                            
+                            # Decode the base64 string to bytes
+                            processed_image_bytes = base64.b64decode(processed_image_base64)
+                            # Display the processed image
+                            st.image(processed_image_bytes, caption="Processed Image.", use_column_width=True)
+                            
+                            # Optional: Add a download button for the processed image
+                            st.download_button(
+                                label="Download Processed Image",
+                                data=processed_image_bytes,
+                                file_name=f"processed_{uploaded_file.name}",
+                                mime=uploaded_file.type # Use the mime type of the uploaded file
+                            )
+                        else:
+                            st.error("Inference completed, but no processed image was returned.")
+
+                    elif response.status_code == 400:
+                        error_detail = response.json().get("detail", "Bad request.")
+                        st.error(f"Failed to process image (Bad Request): {error_detail}")
+                    elif response.status_code == 500:
+                        error_detail = response.json().get("detail", "Internal server error.")
+                        st.error(f"Failed to process image (Server Error): {error_detail}")
+                    else:
+                        st.error(f"Failed to process image. Status code: {response.status_code}. Response: {response.text}")
                 
-                if response.status_code == 200:
-                    extraction_data = response.json()
-                    extraction_id = extraction_data["extraction_id"]
-                    
-                    # Create a progress bar
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-                    
-                    # Poll for status until completed
-                    completed = False
-                    while not completed:
-                        status_response = requests.get(f"{API_URL}/extraction/status/{extraction_id}")
-                        
-                        if status_response.status_code == 200:
-                            status_data = status_response.json()
-                            progress = status_data.get("progress", 0)
-                            status = status_data.get("status", "")
-                            
-                            progress_bar.progress(progress)
-                            status_text.text(f"Status: {status.capitalize()} - Progress: {int(progress * 100)}%")
-                            
-                            if status == "completed":
-                                completed = True
-                            elif status == "failed":
-                                st.error("Extraction failed. Please try again.")
-                                break
-                        else:
-                            st.error("Failed to get extraction status.")
-                            break
-                        
-                        time.sleep(1)
-                    
-                    # If completed, get and display results
-                    if completed:
-                        results_response = requests.get(f"{API_URL}/extraction/results/{extraction_id}")
-                        
-                        if results_response.status_code == 200:
-                            results = results_response.json()
-                            
-                            st.success("Extraction completed successfully!")
-                            
-                            # Display results in a nice format
-                            col1, col2 = st.columns(2)
-                            
-                            with col1:
-                                st.subheader("Invoice Details")
-                                st.write(f"**Vendor:** {results.get('vendor_name', 'N/A')}")
-                                st.write(f"**Date:** {results.get('date', 'N/A')}")
-                                st.write(f"**Total Tax:** ${results.get('total_tax', 'N/A')}")
-                                st.write(f"**Total Amount:** ${results.get('total_amount', 'N/A')}")
-                            
-                            with col2:
-                                st.subheader("Items")
-                                if results.get("items"):
-                                    # Convert items to DataFrame for better display
-                                    items_df = pd.DataFrame(results["items"])
-                                    st.dataframe(items_df)
-                                else:
-                                    st.write("No items found.")
-                        else:
-                            st.error("Failed to get extraction results.")
-                else:
-                    st.error(f"Failed to start extraction: {response.text}")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Could not connect to the API: {e}")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {e}")
+    
+    st.sidebar.header("About")
+    st.sidebar.info(
+        "This application demonstrates image inference using a backend API. "
+        "Upload an image, and the system will process it and display the result."
+        "\n\nAuthors: Victor Pérez, Jordi Sanchez, Maryi Carvajal, Simón Aristizábal"
+        "\n\nUniversidad de los Andes - MAIA"
+    )
 
 if __name__ == "__main__":
     main() 

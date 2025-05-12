@@ -187,7 +187,7 @@ def main():
             thumbnail = img_cpy.crop(coords)
             score = round(score * 100, 0)
             thumbnail = draw_text(thumbnail, f"{sp} | {score}%", position=(10,5), font_size=int(0.08*args.ts))
-            thumbnail.save(os.path.join(dest_thumb, img_name[:-4] + f'_{i}.JPG'))
+            thumbnail.save(os.path.join(dest_thumb, img_name[:-4] + f'_{i}.jpg'))
 
 if __name__ == '__main__':
     main()

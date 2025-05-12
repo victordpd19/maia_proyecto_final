@@ -6,12 +6,12 @@ import base64
 import os
 import subprocess
 import glob
-
+import shutil
 router = APIRouter(tags=["inference"])
 
 # --- Constants (Consider moving to a configuration file) ---
 MODEL_PTH_PATH = "app/herdnet/full_model.pth"  # Placeholder: Ensure this path is correct
-BASE_IMAGES_DIR = "images"  # Base directory for storing inference images
+BASE_IMAGES_DIR = "app/images"  # Base directory for storing inference images
 INFER_SCRIPT_PATH = "app/herdnet/infer-custom.py"  # Path to the inference script
 # --- End Constants ---
 
@@ -25,6 +25,9 @@ class InferenceStatusResponse(BaseModel):
     inference_id: str
     status: str
     progress: Optional[float] = None
+
+class CleanupResponse(BaseModel):
+    message: str
 
 # Helper function to run the inference script and get the processed image
 def run_herdnet_inference(
@@ -153,6 +156,16 @@ def infer(request: InferenceRequest):
 # The get_inference_status and get_inference_results endpoints are less relevant
 # for a synchronous flow that directly returns the image.
 # They are kept here but would need rethinking if this is the primary mode.
+
+# Clean up the inference directory after the inference is done
+
+@router.post("/cleanup", response_model=CleanupResponse)
+def clean_up_inference_directory():
+    inference_dir = os.path.join(BASE_IMAGES_DIR)
+    if os.path.exists(inference_dir):
+        shutil.rmtree(inference_dir)
+    return CleanupResponse(message="Inference directory cleaned up")
+
 
 
 

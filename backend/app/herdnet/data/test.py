@@ -28,11 +28,14 @@ url = "http://localhost:8000/inference/infer"
 
 response = requests.post(url, json={"image": encoded_string})
 
-print(response.json())
-
 # decode image from base64
 decoded_image = base64.b64decode(response.json()["image"])
 
 # save to file
 with open("decoded_image.jpg", "wb") as file:
     file.write(decoded_image)
+
+# cleanup
+# url = "http://localhost:8000/inference/cleanup"
+# response = requests.post(url)
+# print(response.json())

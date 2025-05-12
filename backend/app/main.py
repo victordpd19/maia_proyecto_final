@@ -23,5 +23,6 @@ app.add_middleware(
 app.include_router(ping.router)
 #app.include_router(extraction.router, prefix="/extraction")
 app.include_router(inference_router, prefix="/inference")
+
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
