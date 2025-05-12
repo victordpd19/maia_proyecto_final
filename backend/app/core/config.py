@@ -14,13 +14,12 @@ class Settings(BaseSettings):
 
     # API settings
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Invoice Extraction API"
+    PROJECT_NAME: str = "CBAM Herdnet"
+    PROJECT_DESCRIPTION: str = "Localization and clasifications of african wildlife"
 
-    # OpenAI settings
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    # Other animaloc and herdent configurations
 
-    # Tesseract settings
-    TESSERACT_CMD: str = os.getenv("TESSERACT_CMD", "tesseract")
+    
 
     class Config:
         env_file = ".env"
@@ -29,7 +28,3 @@ class Settings(BaseSettings):
 
 # Create global settings object
 settings = Settings()
-
-# Configure pytesseract
-
-pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD

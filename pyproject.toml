@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "animaloc_custom"
+version = "0.1.0"
+description = "Localization and clasification of african wildlife"
+authors = ["Victor Perez <victorperezd19@gmail.com>"]
+readme = "README.md"
+packages = [
+    {include = "animaloc", from = "backend/app/herdnet"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "*"
+uvicorn = "*"
+python-multipart = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+passlib = {extras = ["bcrypt"], version = "*"}
+sqlalchemy = "*"
+psycopg2-binary = "*"
+pydantic = "*"
+python-dotenv = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api" 
