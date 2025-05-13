@@ -22,9 +22,9 @@ st.set_page_config(
 )
 
 def main():
-    st.title("Image Inference with HerdNet")
+    st.title("Image Inference with HerdNet CBAM")
     st.markdown("""
-    Upload an image to perform inference using the HerdNet model.
+    Upload an image to perform inference using the modified HerdNet CBAM model.
     The processed image will be displayed below.
     """)
 
@@ -37,7 +37,7 @@ def main():
         # To display the image, we can use st.image directly with the uploaded file object
         # or read bytes and then display. PIL can be used for more control if needed.
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image.", use_column_width=True)
+        st.image(image, caption="Uploaded Image.", use_column_width=False)
 
         # Convert image to base64
         img_bytes = uploaded_file.getvalue()
@@ -56,23 +56,45 @@ def main():
                     if response.status_code == 200:
                         inference_data = response.json()
                         processed_image_base64 = inference_data.get("image")
+                        detections_data = inference_data.get("detections") # Get detections data
 
                         if processed_image_base64:
                             st.success("Image processed successfully!")
-                            st.subheader("Processed Image")
-                            
-                            # Decode the base64 string to bytes
-                            processed_image_bytes = base64.b64decode(processed_image_base64)
-                            # Display the processed image
-                            st.image(processed_image_bytes, caption="Processed Image.", use_column_width=True)
-                            
-                            # Optional: Add a download button for the processed image
-                            st.download_button(
-                                label="Download Processed Image",
-                                data=processed_image_bytes,
-                                file_name=f"processed_{uploaded_file.name}",
-                                mime=uploaded_file.type # Use the mime type of the uploaded file
-                            )
+
+                            # Create columns for layout
+                            col1, col2 = st.columns([2, 1]) # Assign more space to the image column
+
+                            with col1:
+                                st.subheader("Processed Image")
+                                # Decode the base64 string to bytes
+                                processed_image_bytes = base64.b64decode(processed_image_base64)
+                                # Display the processed image
+                                st.image(processed_image_bytes, caption="Processed Image.", use_column_width=True)
+
+                                # Optional: Add a download button for the processed image
+                                st.download_button(
+                                    label="Download Processed Image",
+                                    data=processed_image_bytes,
+                                    file_name=f"processed_{uploaded_file.name}",
+                                    mime=uploaded_file.type # Use the mime type of the uploaded file
+                                )
+
+                            with col2:
+                                # Display detections data if available
+                                if detections_data:
+                                    st.subheader("Detections Data")
+                                    try:
+                                        # Convert detections data to DataFrame for better display
+                                        detections_df = pd.DataFrame(detections_data)
+                                        st.dataframe(detections_df)
+                                        # Optionally, display count
+                                        st.write(f"Total detections: {len(detections_df)}")
+                                    except Exception as e:
+                                        st.warning(f"Could not display detections data as table: {e}")
+                                        st.json(detections_data) # Fallback to showing raw JSON
+                                else:
+                                    st.info("No detections data was returned by the backend.")
+
                         else:
                             st.error("Inference completed, but no processed image was returned.")
 

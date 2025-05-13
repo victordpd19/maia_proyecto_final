@@ -31,6 +31,11 @@ response = requests.post(url, json={"image": encoded_string})
 # decode image from base64
 decoded_image = base64.b64decode(response.json()["image"])
 
+# print detections
+print("Detections:")
+print(response.json()["detections"])
+
+
 # save to file
 with open("decoded_image.jpg", "wb") as file:
     file.write(decoded_image)

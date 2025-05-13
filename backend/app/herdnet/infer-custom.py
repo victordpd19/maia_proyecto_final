@@ -21,6 +21,7 @@ import pandas
 import warnings
 import numpy
 import PIL
+import logging
 
 import albumentations as A
 
@@ -37,6 +38,12 @@ from animaloc.vizual import draw_points, draw_text
 warnings.filterwarnings('ignore')
 PIL.Image.MAX_IMAGE_PIXELS = None
 
+# --- Logger Setup ---
+# Basic configuration. If this script is called by another that already configured logging,
+# this might be overridden or add a handler. For standalone use, it's good.
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+# --- End Logger Setup ---
 
 parser = argparse.ArgumentParser(
     prog='inference', 
@@ -79,8 +86,9 @@ def main():
 
     checkpoint = torch.load(args.pth, map_location=map_location)
     classes = checkpoint['classes']
-    print(checkpoint.keys())
-    print(checkpoint['classes'])
+    logger.info(f"Loaded checkpoint. Keys: {list(checkpoint.keys())}")
+    logger.info(f"Classes from checkpoint: {classes}")
+
     num_classes = len(classes) + 1
     img_mean = checkpoint['mean']
     img_std = checkpoint['std']
@@ -109,7 +117,7 @@ def main():
         sampler=torch.utils.data.SequentialSampler(dataset))
     
     # Build the trained model
-    print('Building the model ...')
+    logger.info('Building the model ...')
     device = torch.device(args.device)
     # if args.model == 'cbam':
     #     model = HerdNetCBAM(num_classes=num_classes, pretrained=False)
@@ -124,7 +132,7 @@ def main():
     #model = LossWrapper(model, [])
     model= checkpoint['model']
     #torch.save(model, './full_model.pth')
-    print("****")
+    logger.info("Model built and loaded from checkpoint.")
 
     # Build the evaluator
     stitcher = HerdNetStitcher(
@@ -151,18 +159,20 @@ def main():
         )
 
     # Start inference
-    print('Starting inference ...')
+    logger.info('Starting inference ...')
     out = evaluator.evaluate(wandb_flag=False, viz=False, log_meters=False)
 
     # Save the detections
-    print('Saving the detections ...')
+    logger.info('Saving the detections ...')
     detections = evaluator.detections
     detections.dropna(inplace=True)
     detections['species'] = detections['labels'].map(classes)
-    detections.to_csv(os.path.join(dest, f'{curr_date}_detections.csv'), index=False)
+    detections_csv_path = os.path.join(dest, f'{curr_date}_detections.csv')
+    detections.to_csv(detections_csv_path, index=False)
+    logger.info(f"Detections saved to {detections_csv_path}")
 
     # Draw detections on images and create thumbnails
-    print('Exporting plots and thumbnails ...')
+    logger.info('Exporting plots and thumbnails ...')
     dest_plots = os.path.join(dest, 'plots')
     mkdir(dest_plots)
     dest_thumb = os.path.join(dest, 'thumbnails')
@@ -177,17 +187,54 @@ def main():
         pts = list(detections[detections['images']==img_name][['y','x']].to_records(index=False))
         pts = [(y, x) for y, x in pts]
         output = draw_points(img, pts, color='red', size=50)
-        output.save(os.path.join(dest_plots, img_name), quality=95)
+        # output.save(os.path.join(dest_plots, img_name), quality=95) # Move saving after drawing text
 
-        # Create and export thumbnails
+        # --- Add text ID to each point on the main image ---
         sp_score = list(detections[detections['images']==img_name][['species','scores']].to_records(index=False))
+        # Determine font size relative to image size or use a fixed size
+        # Example: Relative size (adjust 0.02 as needed)
+        try:
+            base_font_size = max(15, int(min(img.size) * 0.02))
+        except Exception:
+            base_font_size = 20 # Fallback font size
+
         for i, ((y, x), (sp, score)) in enumerate(zip(pts, sp_score)):
-            off = args.ts//2
-            coords = (x - off, y - off, x + off, y + off)
-            thumbnail = img_cpy.crop(coords)
-            score = round(score * 100, 0)
-            thumbnail = draw_text(thumbnail, f"{sp} | {score}%", position=(10,5), font_size=int(0.08*args.ts))
-            thumbnail.save(os.path.join(dest_thumb, img_name[:-4] + f'_{i}.jpg'))
+            point_id = str(i + 1) # ID starts from 1
+            # Position the text slightly offset from the point (x, y)
+            # Adjust the offset (e.g., (10, -10)) as needed
+            text_position = (x + 10, y - 10)
+            # Use the draw_text function (ensure it's defined/imported earlier in the script)
+            # We assume draw_text modifies the image in place or returns the modified image
+            try:
+                 # Assuming draw_text exists and works like: draw_text(image, text, position, font_size, color)
+                 output = draw_text(output, point_id, position=text_position, font_size=base_font_size)
+            except NameError:
+                 logger.warning("'draw_text' function not found. Attempting PIL fallback to add point IDs.")
+                 # Optional: Add PIL drawing logic here as a fallback if draw_text is missing
+                 from PIL import ImageDraw, ImageFont
+                 try:
+                     draw = ImageDraw.Draw(output)
+                     # You might need to specify a font file path for ImageFont
+                     # font = ImageFont.truetype("arial.ttf", base_font_size)
+                     font = ImageFont.load_default() # Use default PIL font if specific one not needed
+                     draw.text(text_position, point_id, fill='yellow', font=font)
+                 except Exception as pil_error:
+                     logger.error(f"PIL text drawing failed for point IDs: {pil_error}", exc_info=True)
+
+            # --- Original thumbnail creation code ---
+            # off = args.ts//2
+            # coords = (x - off, y - off, x + off, y + off)
+            # thumbnail = img_cpy.crop(coords)
+            # score = round(score * 100, 0)
+            # thumbnail = draw_text(thumbnail, f"{sp} | {score}%", position=(10,5), font_size=int(0.08*args.ts))
+            # thumbnail.save(os.path.join(dest_thumb, img_name[:-4] + f'_{i}.jpg'))
+            # --- End original thumbnail creation code ---
+
+        # Save the final image with points and IDs
+        output.save(os.path.join(dest_plots, img_name), quality=95)
+    logger.info(f"Finished exporting plots and thumbnails to {dest_plots} and {dest_thumb}")
 
 if __name__ == '__main__':
+    logger.info(f"Starting HerdNet inference script with arguments: {args}")
     main()
+    logger.info("HerdNet inference script finished.")
