@@ -2,6 +2,7 @@
 
 services:
   backend:
+    # image: herdnet-backend
     build: ./backend
     ports:
       - "8000:8000"
@@ -9,14 +10,10 @@ services:
     env_file:
       - .env.example
     
-    environment:
-      - OPENAI_API_KEY= #${OPENAI_API_KEY}
-      - TESSERACT_CMD=tesseract
-    
     volumes:
       - ./backend:/app
     networks:
-      - invoice-network
+      - herdnet-network
     restart: always
 
   frontend:
@@ -30,9 +27,9 @@ services:
     depends_on:
       - backend
     networks:
-      - invoice-network
+      - herdnet-network
     restart: always
 
 networks:
-  invoice-network:
+  herdnet-network:
     driver: bridge 

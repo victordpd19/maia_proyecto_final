@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["inference"])
 
-# --- Constants (Consider moving to a configuration file) ---
+# --- Constants todo move to config file ---
 MODEL_PTH_PATH = "app/herdnet/full_model.pth"  # Placeholder: Ensure this path is correct
 BASE_IMAGES_DIR = "app/images"  # Base directory for storing inference images
 INFER_SCRIPT_PATH = "app/herdnet/infer-custom.py"  # Path to the inference script
@@ -68,7 +68,7 @@ def run_herdnet_inference(
         INFER_SCRIPT_PATH,
         image_input_dir,  # 'root' argument for infer-custom.py
         MODEL_PTH_PATH,   # 'pth' argument
-        "-device", "cuda",
+        "-device", "cpu",
         # Add other arguments like -size, -over if needed
     ]
 
