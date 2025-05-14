@@ -33,7 +33,8 @@ def draw_detections(image, detections, score_threshold):
     # Draw dots for each detection
     for detection in filtered_detections:
         x, y = detection['x'], detection['y']
-        draw.ellipse([x-5, y-5, x+5, y+5], fill='red')
+        draw.ellipse([x-25, y-25, x+25, y+25], fill='red')
+        draw.text((x-10, y-10), f"ID: {detection['point_id']}", fill='white')
     
     return img_with_dots
 
@@ -159,39 +160,43 @@ def main():
 
         # Display processed image and detections if they exist in session state
         if st.session_state.processed_image is not None:
-            st.subheader("Processed Image")
-            st.image(st.session_state.processed_image, caption="Processed Image.", use_column_width=True)
+            with st.expander("Processed Image", expanded=True):
+                st.subheader("Processed Image")
+                st.image(st.session_state.processed_image, caption="Processed Image.", use_column_width=True)
 
-            # Download button for processed image
-            st.download_button(
-                label="Download Processed Image",
-                data=st.session_state.processed_image,
-                file_name="processed_image.jpg",
-                mime="image/jpeg"
-            )
-
-            if st.session_state.detections_data:
-                # Add score threshold slider
-                score_threshold = st.slider(
-                    "Score Threshold",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.01,
-                    help="Filter detections by confidence score"
+                # Download button for processed image
+                st.download_button(
+                    label="Download Processed Image",
+                    data=st.session_state.processed_image,
+                    file_name="processed_image.jpg",
+                    mime="image/jpeg"
                 )
-                
-                # Filter detections by score threshold
-                filtered_detections = [d for d in st.session_state.detections_data if d['scores'] >= score_threshold]
-                
-                # Display filtered detections count
-                st.write(f"Total detections: {len(filtered_detections)} (filtered from {len(st.session_state.detections_data)} total)")
-                
-                # Recreate image with dots
-                if len(filtered_detections) > 0 and st.session_state.original_image is not None:
-                    st.subheader("Detections Visualization")
-                    img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
-                    st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
+
+                if st.session_state.detections_data:
+                    # Add score threshold slider
+                    score_threshold = st.slider(
+                        "Score Threshold",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.5,
+                        step=0.01,
+                        help="Filter detections by confidence score"
+                    )
+                    
+                    # Filter detections by score threshold
+                    filtered_detections = [d for d in st.session_state.detections_data if d['scores'] >= score_threshold]
+                    
+                    # Display filtered detections count
+                    st.write(f"Total detections: {len(filtered_detections)} (filtered from {len(st.session_state.detections_data)} total)")
+                    
+                    # Recreate image with dots
+                    if len(filtered_detections) > 0 and st.session_state.original_image is not None:
+                        st.subheader("Detections Visualization")
+                        img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
+                        st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
+                    # Add table with detections data
+                    st.subheader("Detections Data")
+                    st.dataframe(st.session_state.detections_data, use_container_width=True)
 
 if __name__ == "__main__":
     main() 
