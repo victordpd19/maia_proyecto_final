@@ -44,11 +44,10 @@ class InferenceStatusResponse(BaseModel):
 class CleanupResponse(BaseModel):
     message: str
 
-# Helper function to run the inference script and get the processed image
 def run_herdnet_inference(
-    image_input_dir: str, # Directory containing the single image, e.g. backend/images/inf_id/
-    original_image_filename: str # Filename of the input image, e.g., <uuid>.jpg
-) -> Dict[str, Any]: # Return a dictionary containing image and detections
+    image_input_dir: str, 
+    original_image_filename: str 
+) -> Dict[str, Any]: 
     """
     Runs the HerdNet inference script synchronously and returns the base64 encoded output image
     and detections data from the CSV (with added point IDs).
@@ -69,7 +68,7 @@ def run_herdnet_inference(
         image_input_dir,  # 'root' argument for infer-custom.py
         MODEL_PTH_PATH,   # 'pth' argument
         "-device", "cpu",
-        # Add other arguments like -size, -over if needed
+        
     ]
 
     try:
@@ -83,7 +82,7 @@ def run_herdnet_inference(
             if process.stderr: # Also log stderr even on success, as it might contain warnings
                 logger.warning(f"Stderr (on success): {process.stderr.strip()}")
 
-            # Find the results directory created by infer-custom.py
+
             # It creates a dir like 'YYYYMMDD-HHMMSS_HerdNet_results'
             search_pattern = os.path.join(image_input_dir, "*_HerdNet_results")
             results_dirs = glob.glob(search_pattern)
@@ -104,15 +103,13 @@ def run_herdnet_inference(
                     df_detections = pd.read_csv(detections_csv_path)
                     # Add point_id column (index + 1)
                     df_detections['point_id'] = df_detections.index + 1
-                    # Optional: Reorder columns to put point_id first
-                    # --- Select only the desired columns --- 
+                    
                     desired_columns = ['point_id', 'scores', 'x', 'y', 'species']
-                    # Check which desired columns actually exist in the DataFrame to avoid errors
+                    
                     columns_to_keep = [col for col in desired_columns if col in df_detections.columns]
                     if len(columns_to_keep) < len(desired_columns):
                         logger.warning(f"Not all desired columns ({desired_columns}) found in CSV. Keeping only: {columns_to_keep}")
                     df_detections = df_detections[columns_to_keep]
-                    # --- End column selection ---
                     
                     # Convert NaN to None for JSON compatibility if necessary
                     df_detections = df_detections.where(pd.notnull(df_detections), None)
@@ -125,7 +122,6 @@ def run_herdnet_inference(
                     logger.error(f"Failed to read or process detections CSV {detections_csv_path}: {e}")
             else:
                 logger.warning(f"Detections CSV file not found in {herdnet_results_dir}")
-            # --- End Find and Read Detections CSV ---
 
             # Path to the plotted image (should have the same name as original_image_filename)
             output_image_path = os.path.join(herdnet_results_dir, "plots", original_image_filename)
@@ -158,7 +154,7 @@ def infer(request: InferenceRequest):
     """
     Processes an image synchronously and returns the processed image and detections (with point IDs).
     """
-    unique_id = str(uuid.uuid4()) # Still useful for unique temp directory naming
+    unique_id = str(uuid.uuid4()) 
     
     current_inference_image_dir = os.path.join(BASE_IMAGES_DIR, unique_id)
     
@@ -176,12 +172,9 @@ def infer(request: InferenceRequest):
         with open(image_path, "wb") as f:
             f.write(image_data)
     except base64.binascii.Error:
-        # import shutil # Consider cleanup
-        # shutil.rmtree(current_inference_image_dir, ignore_errors=True)
         raise HTTPException(status_code=400, detail="Invalid base64 image data.")
     except Exception as e:
-        # import shutil # Consider cleanup
-        # shutil.rmtree(current_inference_image_dir, ignore_errors=True)
+    
         raise HTTPException(status_code=500, detail=f"Failed to save image: {str(e)}")
 
     # Run inference synchronously
@@ -190,15 +183,6 @@ def infer(request: InferenceRequest):
         original_image_filename=image_filename
     )
     
-    # --- Optional: Cleanup ---
-    # import shutil
-    # try:
-    #     shutil.rmtree(current_inference_image_dir) # remove the temp dir after processing
-    #     print(f"Cleaned up directory: {current_inference_image_dir}")
-    # except Exception as e:
-    #     print(f"Error cleaning up directory {current_inference_image_dir}: {e}")
-    # --- End Optional: Cleanup ---
-
     if inference_result["image"]: # Check if image processing was successful
         return InferenceResponse(
             image=inference_result["image"],
@@ -209,11 +193,6 @@ def infer(request: InferenceRequest):
         # If not, it remains with the original image and any partial results.
         raise HTTPException(status_code=500, detail="Inference failed or output image not found.")
 
-# The get_inference_status and get_inference_results endpoints are less relevant
-# for a synchronous flow that directly returns the image.
-# They are kept here but would need rethinking if this is the primary mode.
-
-# Clean up the inference directory after the inference is done
 
 @router.post("/cleanup", response_model=CleanupResponse)
 def clean_up_inference_directory():

@@ -39,8 +39,6 @@ warnings.filterwarnings('ignore')
 PIL.Image.MAX_IMAGE_PIXELS = None
 
 # --- Logger Setup ---
-# Basic configuration. If this script is called by another that already configured logging,
-# this might be overridden or add a handler. For standalone use, it's good.
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 # --- End Logger Setup ---
@@ -119,17 +117,6 @@ def main():
     # Build the trained model
     logger.info('Building the model ...')
     device = torch.device(args.device)
-    # if args.model == 'cbam':
-    #     model = HerdNetCBAM(num_classes=num_classes, pretrained=False)
-    # else:
-    #     model = HerdNet(num_classes=num_classes, pretrained=False)
-    # print("****")
-    # torch.save(model, './full_model.pth')
-    # print("****")
-    # model = torch.load('./full_model.pth', map_location=map_location)
-    # file = {'model': model, 'classes': classes, 'mean': img_mean, 'std': img_std}
-    # torch.save(file, './full_model.pth')
-    #model = LossWrapper(model, [])
     model= checkpoint['model']
     #torch.save(model, './full_model.pth')
     logger.info("Model built and loaded from checkpoint.")
@@ -189,10 +176,7 @@ def main():
         output = draw_points(img, pts, color='red', size=50)
         # output.save(os.path.join(dest_plots, img_name), quality=95) # Move saving after drawing text
 
-        # --- Add text ID to each point on the main image ---
         sp_score = list(detections[detections['images']==img_name][['species','scores']].to_records(index=False))
-        # Determine font size relative to image size or use a fixed size
-        # Example: Relative size (adjust 0.02 as needed)
         try:
             base_font_size = max(15, int(min(img.size) * 0.02))
         except Exception:
@@ -203,32 +187,19 @@ def main():
             # Position the text slightly offset from the point (x, y)
             # Adjust the offset (e.g., (10, -10)) as needed
             text_position = (x + 10, y - 10)
-            # Use the draw_text function (ensure it's defined/imported earlier in the script)
-            # We assume draw_text modifies the image in place or returns the modified image
             try:
-                 # Assuming draw_text exists and works like: draw_text(image, text, position, font_size, color)
+                
                  output = draw_text(output, point_id, position=text_position, font_size=base_font_size)
             except NameError:
                  logger.warning("'draw_text' function not found. Attempting PIL fallback to add point IDs.")
-                 # Optional: Add PIL drawing logic here as a fallback if draw_text is missing
                  from PIL import ImageDraw, ImageFont
                  try:
                      draw = ImageDraw.Draw(output)
-                     # You might need to specify a font file path for ImageFont
-                     # font = ImageFont.truetype("arial.ttf", base_font_size)
                      font = ImageFont.load_default() # Use default PIL font if specific one not needed
                      draw.text(text_position, point_id, fill='yellow', font=font)
                  except Exception as pil_error:
                      logger.error(f"PIL text drawing failed for point IDs: {pil_error}", exc_info=True)
 
-            # --- Original thumbnail creation code ---
-            # off = args.ts//2
-            # coords = (x - off, y - off, x + off, y + off)
-            # thumbnail = img_cpy.crop(coords)
-            # score = round(score * 100, 0)
-            # thumbnail = draw_text(thumbnail, f"{sp} | {score}%", position=(10,5), font_size=int(0.08*args.ts))
-            # thumbnail.save(os.path.join(dest_thumb, img_name[:-4] + f'_{i}.jpg'))
-            # --- End original thumbnail creation code ---
 
         # Save the final image with points and IDs
         output.save(os.path.join(dest_plots, img_name), quality=95)
