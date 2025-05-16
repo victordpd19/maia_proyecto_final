@@ -9,7 +9,7 @@
 Universidad de los Andes - Maestría en Inteligencia Artificial (MAIA)
 
 ## Descripción del Proyecto
-Este proyecto implementa una extensión del modelo HerdNet mediante la incorporación de un módulo de atención CBAM (Convolutional Block Attention Module) para mejorar la detección y conteo de animales en manadas densas a partir de imágenes aéreas. El CBAM permite al modelo enfocar su atención tanto en regiones espaciales como en canales relevantes, mejorando la capacidad de localización y clasificación de especies.
+Este proyecto implementa una extensión del modelo HerdNet mediante la incorporación de un módulo de atención CBAM (Convolutional Block Attention Module) para mejorar la detección y conteo de animales en manadas densas a partir de imágenes aéreas. El CBAM permite al modelo enfocar su atención tanto en regiones espaciales como en canales relevantes del cuello de botella después del backbone del modelo principal.
 
 ## Estructura del Proyecto
 ```
