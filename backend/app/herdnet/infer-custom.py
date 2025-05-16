@@ -72,12 +72,10 @@ args = parser.parse_args()
 
 def main():
 
-    # Create destination folder
     curr_date = current_date()
     dest = os.path.join(args.root, f"{curr_date}_HerdNet_results")
     mkdir(dest)
     
-    # Read info from PTH file
     map_location = torch.device('cpu')
     if torch.cuda.is_available():
         map_location = torch.device('cuda')
@@ -118,7 +116,6 @@ def main():
     logger.info('Building the model ...')
     device = torch.device(args.device)
     model= checkpoint['model']
-    #torch.save(model, './full_model.pth')
     logger.info("Model built and loaded from checkpoint.")
 
     # Build the evaluator
@@ -174,7 +171,6 @@ def main():
         pts = list(detections[detections['images']==img_name][['y','x']].to_records(index=False))
         pts = [(y, x) for y, x in pts]
         output = draw_points(img, pts, color='red', size=50)
-        # output.save(os.path.join(dest_plots, img_name), quality=95) # Move saving after drawing text
 
         sp_score = list(detections[detections['images']==img_name][['species','scores']].to_records(index=False))
         try:
@@ -183,7 +179,7 @@ def main():
             base_font_size = 20
 
         for i, ((y, x), (sp, score)) in enumerate(zip(pts, sp_score)):
-            point_id = str(i + 1) # ID starts from 1
+            point_id = str(i + 1)
             text_position = (x + 10, y - 10)
             try:
                 

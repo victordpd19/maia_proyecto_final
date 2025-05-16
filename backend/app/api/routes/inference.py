@@ -19,12 +19,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["inference"])
 
-# --- Constants todo move to config file ---
-MODEL_PTH_PATH = "app/herdnet/full_model.pth"  # Placeholder: Ensure this path is correct
-BASE_IMAGES_DIR = "app/images"  # Base directory for storing inference images
-INFER_SCRIPT_PATH = "app/herdnet/infer-custom.py"  # Path to the inference script
+MODEL_PTH_PATH = "app/herdnet/full_model.pth"
+BASE_IMAGES_DIR = "app/images"
+INFER_SCRIPT_PATH = "app/herdnet/infer-custom.py"
 DEVICE = os.getenv("DEVICE", "cpu")
-# --- End Constants ---
 
 class InferenceRequest(BaseModel):
     image: str
@@ -67,8 +65,8 @@ def run_herdnet_inference(
     command = [
         "python",
         INFER_SCRIPT_PATH,
-        image_input_dir,  # 'root' argument for infer-custom.py
-        MODEL_PTH_PATH,   # 'pth' argument
+        image_input_dir,
+        MODEL_PTH_PATH,
         "-device", DEVICE,
         
     ]
@@ -85,7 +83,6 @@ def run_herdnet_inference(
                 logger.warning(f"Stderr (on success): {process.stderr.strip()}")
 
 
-            # It creates a dir like 'YYYYMMDD-HHMMSS_HerdNet_results'
             search_pattern = os.path.join(image_input_dir, "*_HerdNet_results")
             results_dirs = glob.glob(search_pattern)
 
@@ -95,7 +92,6 @@ def run_herdnet_inference(
             
             herdnet_results_dir = results_dirs[0]
             
-            # Find and Read Detections CSV
             csv_search_pattern = os.path.join(herdnet_results_dir, "*_detections.csv")
             csv_files = glob.glob(csv_search_pattern)
             if csv_files:
