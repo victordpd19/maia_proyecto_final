@@ -180,12 +180,10 @@ def main():
         try:
             base_font_size = max(15, int(min(img.size) * 0.02))
         except Exception:
-            base_font_size = 20 # Fallback font size
+            base_font_size = 20
 
         for i, ((y, x), (sp, score)) in enumerate(zip(pts, sp_score)):
             point_id = str(i + 1) # ID starts from 1
-            # Position the text slightly offset from the point (x, y)
-            # Adjust the offset (e.g., (10, -10)) as needed
             text_position = (x + 10, y - 10)
             try:
                 
@@ -195,7 +193,7 @@ def main():
                  from PIL import ImageDraw, ImageFont
                  try:
                      draw = ImageDraw.Draw(output)
-                     font = ImageFont.load_default() # Use default PIL font if specific one not needed
+                     font = ImageFont.load_default()
                      draw.text(text_position, point_id, fill='yellow', font=font)
                  except Exception as pil_error:
                      logger.error(f"PIL text drawing failed for point IDs: {pil_error}", exc_info=True)

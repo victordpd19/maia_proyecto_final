@@ -14,10 +14,8 @@ import dotenv
 
 dotenv.load_dotenv()
 
-# --- Logger Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-# --- End Logger Setup ---
 
 router = APIRouter(tags=["inference"])
 
@@ -29,9 +27,9 @@ DEVICE = os.getenv("DEVICE", "cpu")
 # --- End Constants ---
 
 class InferenceRequest(BaseModel):
-    image: str  # Changed from images: List[str] to a single image
+    image: str
 
-class PointData(BaseModel): # Optional: Keep if needed elsewhere or for nested validation
+class PointData(BaseModel):
     id: Optional[int] = None
     x: float
     y: float
@@ -49,14 +47,14 @@ class CleanupResponse(BaseModel):
     message: str
 
 def run_herdnet_inference(
-    image_input_dir: str, 
-    original_image_filename: str 
-) -> Dict[str, Any]: 
+    image_input_dir: str,
+    original_image_filename: str
+) -> Dict[str, Any]:
     """
     Runs the HerdNet inference script synchronously and returns the base64 encoded output image
     and detections data from the CSV (with added point IDs).
     """
-    output = {"image": None, "detections": None} # Initialize output dictionary (removed points)
+    output = {"image": None, "detections": None}
 
     if not os.path.exists(MODEL_PTH_PATH):
         logger.error(f"Model file not found at {MODEL_PTH_PATH}")
@@ -83,7 +81,7 @@ def run_herdnet_inference(
             logger.info(f"Inference for image in {image_input_dir} completed successfully.")
             if process.stdout:
                 logger.info(f"Stdout: {process.stdout.strip()}")
-            if process.stderr: # Also log stderr even on success, as it might contain warnings
+            if process.stderr:
                 logger.warning(f"Stderr (on success): {process.stderr.strip()}")
 
 
@@ -95,39 +93,33 @@ def run_herdnet_inference(
                 logger.error(f"No HerdNet results directory found in {image_input_dir} after successful script run.")
                 return output
             
-            # Assume the first one found is the correct one if multiple (should ideally be one)
             herdnet_results_dir = results_dirs[0]
             
-            # --- Find and Read Detections CSV --- 
+            # Find and Read Detections CSV
             csv_search_pattern = os.path.join(herdnet_results_dir, "*_detections.csv")
             csv_files = glob.glob(csv_search_pattern)
             if csv_files:
-                detections_csv_path = csv_files[0] # Assume the first one is correct
+                detections_csv_path = csv_files[0]
                 try:
                     df_detections = pd.read_csv(detections_csv_path)
-                    # Add point_id column (index + 1)
                     df_detections['point_id'] = df_detections.index + 1
-                    
                     desired_columns = ['point_id', 'scores', 'x', 'y', 'species']
-                    
                     columns_to_keep = [col for col in desired_columns if col in df_detections.columns]
                     if len(columns_to_keep) < len(desired_columns):
                         logger.warning(f"Not all desired columns ({desired_columns}) found in CSV. Keeping only: {columns_to_keep}")
                     df_detections = df_detections[columns_to_keep]
                     
-                    # Convert NaN to None for JSON compatibility if necessary
                     df_detections = df_detections.where(pd.notnull(df_detections), None)
                     output["detections"] = df_detections.to_dict(orient='records')
                     logger.info(f"Successfully loaded detections data from {detections_csv_path}")
                 except pd.errors.EmptyDataError:
                     logger.warning(f"Detections CSV file is empty: {detections_csv_path}")
-                    output["detections"] = [] # Return empty list for empty CSV
+                    output["detections"] = []
                 except Exception as e:
                     logger.error(f"Failed to read or process detections CSV {detections_csv_path}: {e}")
             else:
                 logger.warning(f"Detections CSV file not found in {herdnet_results_dir}")
 
-            # Path to the plotted image (should have the same name as original_image_filename)
             output_image_path = os.path.join(herdnet_results_dir, "plots", original_image_filename)
 
             if os.path.exists(output_image_path):
@@ -178,7 +170,6 @@ def infer(request: InferenceRequest):
     except base64.binascii.Error:
         raise HTTPException(status_code=400, detail="Invalid base64 image data.")
     except Exception as e:
-    
         raise HTTPException(status_code=500, detail=f"Failed to save image: {str(e)}")
 
     # Run inference synchronously
@@ -186,15 +177,13 @@ def infer(request: InferenceRequest):
         image_input_dir=current_inference_image_dir,
         original_image_filename=image_filename
     )
-    
-    if inference_result["image"]: # Check if image processing was successful
+
+    if inference_result["image"]:
         return InferenceResponse(
             image=inference_result["image"],
-            detections=inference_result.get("detections") # Get detections if available
+            detections=inference_result.get("detections")
             )
     else:
-        # If cleanup was done, the temp dir might be gone.
-        # If not, it remains with the original image and any partial results.
         raise HTTPException(status_code=500, detail="Inference failed or output image not found.")
 
 
