@@ -48,6 +48,7 @@ Thumbs.db
 
 # Keep example environment file
 !.env.example
+!/datos/**/*.jpg
 
 # Temporary files
 *.tmp
