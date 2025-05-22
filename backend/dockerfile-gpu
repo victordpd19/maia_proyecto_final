@@ -1,12 +1,7 @@
-FROM nvidia/cuda:11.7.1-base-ubuntu20.04
+FROM python:3.8
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install Python 3.8 and pip
+# Install system dependencies and CUDA libraries
 RUN apt-get update && apt-get install -y \
-    python3.8 \
-    python3.8-distutils \
-    python3-pip \
     build-essential \
     libgl1-mesa-glx \
     libglib2.0-0 \
@@ -15,13 +10,13 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ln -sf /usr/bin/python3.8 /usr/bin/python
+# (Optional) Install CUDA toolkit if needed for your code, or use nvidia/cuda base image if you want full CUDA
 
 WORKDIR /app
 
 COPY app/requirements.txt .
 
-RUN python -m pip install --upgrade pip && \
+RUN pip install --upgrade pip && \
     pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117 && \
     pip install -r requirements.txt
 
