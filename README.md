@@ -53,7 +53,7 @@ maia_proyecto_final/
 └── README.md
 ```
 
-En esta estructura hacen falta los modelos de DLA60 entrenados, los cuales tienen un tamaño superior al permitido por Github. Por lo cual fueron alojados en [Google Drive](https://drive.google.com/drive/folders/1-XwV-6Sp7P04gw3d7YDeeQgVUXqTzRTt?usp=sharing).
+En esta estructura hacen falta los modelos de DLA60 entrenados dentro de la carpeta `modelos/`, los cuales tienen un tamaño superior al permitido por GitHub. Por lo cual fueron alojados en [Google Drive](https://drive.google.com/drive/folders/1-XwV-6Sp7P04gw3d7YDeeQgVUXqTzRTt?usp=sharing).
 
 ## Requisitos
 - Docker
