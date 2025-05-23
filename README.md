@@ -54,7 +54,7 @@ maia_proyecto_final/
 En esta estructura hacen falta los modelos de DLA60 y base entrenados dentro de la carpeta `modelos/`, los cuales tienen un tamaño superior al permitido por GitHub. Por lo cual fueron alojados en [Google Drive](https://drive.google.com/drive/folders/1-XwV-6Sp7P04gw3d7YDeeQgVUXqTzRTt?usp=sharing).
 
 ## Ejecución de notebooks en colab:
-Para ejecutar los notebooks de este repositorio en colab, puede seguir los siguientes links:
+Para ejecutar los notebooks de este repositorio en colab, puede seguir los siguientes links. En el caso de CBAM, este fue entrenado en una VM independiente utilizando la version modificada del repositorio original de Herdnet, encontrado en [HerdnetCBAM](https://github.com/victordpd19/HerdNet).
 
   
 * Test-only: **Herdnet CBAM:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/victordpd19/maia_proyecto_final/blob/main/notebooks/test_herdnet_cbam.ipynb)
