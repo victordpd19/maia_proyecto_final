@@ -17,6 +17,7 @@ services:
     restart: always
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+    gpus: all
 
   frontend:
     build: ./frontend

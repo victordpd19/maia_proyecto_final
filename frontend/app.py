@@ -190,10 +190,10 @@ def main():
                     st.write(f"Total detections: {len(filtered_detections)} (filtered from {len(st.session_state.detections_data)} total)")
                     
                     # Recreate image with dots
-                    if len(filtered_detections) > 0 and st.session_state.original_image is not None:
-                        st.subheader("Detections Visualization")
-                        img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
-                        st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
+                    # if len(filtered_detections) > 0 and st.session_state.original_image is not None:
+                    st.subheader("Detections Visualization")
+                    img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
+                    st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
                     # Add table with detections data
                     st.subheader("Detections Data")
                     st.dataframe(st.session_state.detections_data, use_container_width=True)
