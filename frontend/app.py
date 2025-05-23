@@ -52,12 +52,13 @@ def main():
     
     with right_panel:
         st.header("About")
-        st.info(
-            "An extension of the HerdNet model is presented by incorporating a CBAM (Convolutional Block Attention Module) with the aim "
-            "of improving the detection and counting of animals in dense herds from aerial images. CBAM allows the model to focus its "
-            "attention on both spatially and channel relevant regions, enhancing the ability to localize and classify species. "
-            "The results show improvements in the call and increased robustness in scenarios with high occlusion and non-uniform distributions."
-            "\n\nThis application demonstrates image inference using the modified HerdNet CBAM model through a FastAPI backend. The project is the deployment of the Master in Artificial Intelligence final project."
+        st.info("This paper presents an extension of the HerdNet architecture for multi-species wildlife detection and counting in aerial imagery, " \
+        "achieved by integrating the Convolutional Block Attention Module (CBAM) and applying the Hard Negative Patching (HNP) technique within a two-stage training scheme. " \
+        "Although the HerdNet+CBAM model did not outperform results reported in earlier studies, it nevertheless improved on the baseline implemented " \
+        "here—particularly in per-class precision and validation stability. Moreover, the use of HNP helped reduce false positives and enhance discrimination between ambiguous" \
+        " background regions and true animal instances. These findings position HerdNet+CBAM as a viable and promising alternative for automated wildlife monitoring in complex environments, " \
+        "underscoring the importance of tailoring attention mechanisms to the target domain and complementing architectures with robust training strategies. " \
+        "This is the first documented implementation of HerdNet combined with CBAM in this field, providing a solid foundation for future research on ecological monitoring systems using computer vision."
             "\n\nAuthors: Victor Pérez, Jordi Sanchez, Maryi Carvajal, Simón Aristizábal"
             "\n\nUniversidad de los Andes - MAIA"
         )
@@ -190,10 +191,10 @@ def main():
                     st.write(f"Total detections: {len(filtered_detections)} (filtered from {len(st.session_state.detections_data)} total)")
                     
                     # Recreate image with dots
-                    if len(filtered_detections) > 0 and st.session_state.original_image is not None:
-                        st.subheader("Detections Visualization")
-                        img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
-                        st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
+                    # if len(filtered_detections) > 0 and st.session_state.original_image is not None:
+                    st.subheader("Detections Visualization")
+                    img_with_dots = draw_detections(st.session_state.original_image, filtered_detections, score_threshold)
+                    st.image(img_with_dots, caption="Detections Visualization", use_column_width=True)
                     # Add table with detections data
                     st.subheader("Detections Data")
                     st.dataframe(st.session_state.detections_data, use_container_width=True)
