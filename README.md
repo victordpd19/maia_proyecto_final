@@ -18,22 +18,42 @@ maia_proyecto_final/
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── routes/
-│   │   │       └── inference.py
+│   │   │       ├── inference.py
+│   │   │       └── ping.py
 │   │   ├── core/
+│   │   │   └── config.py
 │   │   ├── herdnet/
 │   │   │   ├── full_model.pth
-│   │   │   └── infer-custom.py
-│   │   ├── services/
+│   │   │   ├── infer-custom.py
+│   │   │   ├── data/
+│   │   │   ├── animaloc/
 │   │   ├── images/
 │   │   ├── main.py
 │   │   └── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── app.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .frontend-env/
+├── notebooks/
+│   ├── train_test_herdnet_dla60.ipynb 
+│   ├── train_herdnet_cbam.ipynb
+│   └── test_herdnet_cbam.ipynb
+├── datos/
+│   ├── sample_00_cropped.JPG
+│   ├── sample_01.JPG
+│   ├── sample_02.JPG
+│   └── sample_03.JPG
+├── documentos/
+│   └── Informe_final.pdf
+├── modelos/ 
+│   └── herdnet_cbam_full_model.pth
 ├── docker-compose.yml
 └── README.md
 ```
+
+En esta estructura hacen falta los modelos de DLA60 entrenados dentro de la carpeta `modelos/`, los cuales tienen un tamaño superior al permitido por GitHub. Por lo cual fueron alojados en [Google Drive](https://drive.google.com/drive/folders/1-XwV-6Sp7P04gw3d7YDeeQgVUXqTzRTt?usp=sharing).
 
 ## Requisitos
 - Docker
